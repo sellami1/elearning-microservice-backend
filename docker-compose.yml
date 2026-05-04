@@ -10,8 +10,6 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
-    ports:
-      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     healthcheck:
@@ -22,7 +20,7 @@ services:
       start_period: 20s
     logging: *default-logging
     networks:
-      - learning-platform
+      - db-net
 
   course-postgres:
     image: postgres:16.8-alpine3.21
@@ -31,8 +29,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5433:5432"
     volumes:
       - course_postgres_data:/var/lib/postgresql/data
       - ./backend/course-service/app/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -44,7 +40,7 @@ services:
       start_period: 20s
     logging: *default-logging
     networks:
-      - learning-platform
+      - db-net
 
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
@@ -53,9 +49,6 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -66,13 +59,11 @@ services:
       start_period: 15s
     logging: *default-logging
     networks:
-      - learning-platform
+      - backend-net
 
   redis:
     image: redis:7.4.2-alpine3.21
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -83,7 +74,7 @@ services:
       start_period: 10s
     logging: *default-logging
     networks:
-      - learning-platform
+      - db-net
 
   user-service:
     build:
@@ -105,8 +96,6 @@ services:
       USER_BACKEND_EMAIL_FROM: ${USER_BACKEND_EMAIL_FROM}
       USER_BACKEND_EMAIL_USER: ${USER_BACKEND_EMAIL_USER}
       USER_BACKEND_EMAIL_PASSWORD: ${USER_BACKEND_EMAIL_PASSWORD}
-    ports:
-      - "${USER_BACKEND_PORT}:${USER_BACKEND_PORT}"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"const net=require('net');const p=Number(process.env.USER_BACKEND_PORT||'8002');const s=net.connect(p,'127.0.0.1',()=>{s.end();process.exit(0);});s.on('error',()=>process.exit(1));s.setTimeout(5000,()=>{s.destroy();process.exit(1);});\""]
       interval: 15s
@@ -118,7 +107,8 @@ services:
         condition: service_healthy
     logging: *default-logging
     networks:
-      - learning-platform
+      - db-net
+      - backend-net
 
   course-service:
     build:
@@ -144,8 +134,6 @@ services:
       COURSE_BACKEND_APP_NAME: ${COURSE_BACKEND_APP_NAME}
       COURSE_BACKEND_APP_VERSION: ${COURSE_BACKEND_APP_VERSION}
       COURSE_BACKEND_DEBUG: ${COURSE_BACKEND_DEBUG}
-    ports:
-      - "${COURSE_BACKEND_PORT}:${COURSE_BACKEND_PORT}"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import os,urllib.request,sys;p=os.getenv('COURSE_BACKEND_PORT','8001');url=f'http://127.0.0.1:{p}/health';sys.exit(0 if urllib.request.urlopen(url, timeout=5).getcode()==200 else 1)\""]
       interval: 15s
@@ -159,7 +147,8 @@ services:
         condition: service_healthy
     logging: *default-logging
     networks:
-      - learning-platform
+      - db-net
+      - backend-net
 
   analytics-service:
     build:
@@ -177,8 +166,6 @@ services:
       ANALYTICS_BACKEND_REDIS_TTL_SECONDS: ${ANALYTICS_BACKEND_REDIS_TTL_SECONDS}
       ANALYTICS_BACKEND_APP_NAME: ${ANALYTICS_BACKEND_APP_NAME}
       ANALYTICS_BACKEND_LOG_LEVEL: ${ANALYTICS_BACKEND_LOG_LEVEL}
-    ports:
-      - "${ANALYTICS_BACKEND_PORT}:${ANALYTICS_BACKEND_PORT}"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import os,urllib.request,sys;p=os.getenv('ANALYTICS_BACKEND_PORT','8003');url=f'http://127.0.0.1:{p}/health';sys.exit(0 if urllib.request.urlopen(url, timeout=5).getcode()==200 else 1)\""]
       interval: 15s
@@ -192,7 +179,8 @@ services:
         condition: service_healthy
     logging: *default-logging
     networks:
-      - learning-platform
+      - db-net
+      - backend-net
 
   frontend:
     build:
@@ -201,9 +189,10 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${FRONTEND_NODE_ENV}
-      NEXT_PUBLIC_API_URL: ${FRONTEND_API_URL}
-    ports:
-      - "${FRONTEND_PORT}:3000"
+      NEXT_PUBLIC_USER_SERVICE_URL: ${NEXT_PUBLIC_USER_SERVICE_URL}
+      NEXT_PUBLIC_COURSE_SERVICE_URL: ${NEXT_PUBLIC_COURSE_SERVICE_URL}
+      NEXT_PUBLIC_ANALYTICS_SERVICE_URL: ${NEXT_PUBLIC_ANALYTICS_SERVICE_URL}
+      NEXT_PUBLIC_MINIO_URL: ${NEXT_PUBLIC_MINIO_URL}
     healthcheck:
       test: ["CMD-SHELL", "node -e \"const net=require('net');const s=net.connect(3000,'127.0.0.1',()=>{s.end();process.exit(0);});s.on('error',()=>process.exit(1));s.setTimeout(5000,()=>{s.destroy();process.exit(1);});\""]
       interval: 15s
@@ -212,7 +201,8 @@ services:
       start_period: 30s
     logging: *default-logging
     networks:
-      - learning-platform
+      - backend-net
+      - frontend-net
 
   gateway:
     image: nginx:1.27.4-alpine3.21
@@ -234,7 +224,8 @@ services:
         condition: service_healthy
     logging: *default-logging
     networks:
-      - learning-platform
+      - backend-net
+      - frontend-net
 
 volumes:
   mongodb_data:
@@ -243,5 +234,9 @@ volumes:
   redis_data:
 
 networks:
-  learning-platform:
+  db-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+  frontend-net:
     driver: bridge
