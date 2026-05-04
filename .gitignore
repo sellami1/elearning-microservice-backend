@@ -4,25 +4,35 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
 
 # dependencies
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
+# testing / coverage
 /coverage
+coverage/
 
-# next.js
+# next.js / frontend builds
 /.next/
 /out/
-
-# production
-/build
+/build/
+/dist/
 
 # misc
 .DS_Store
 *.pem
+*.log
+*.tmp
+*.swp
+.idea/
+.vscode/
+.windsurf/
 
 # debug
 npm-debug.log*
@@ -30,10 +40,11 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
 .env
+.env.*
+!.env.example
 
-# vercel
+# vercel / tooling
 .vercel
 
 # typescript

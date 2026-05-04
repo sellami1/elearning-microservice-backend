@@ -1,2 +1,12 @@
 node_modules
+coverage
+*.log
+*.tmp
+*.swp
 .env
+.env.*
+!.env.example
+.git
+.github
+.idea
+.vscode
