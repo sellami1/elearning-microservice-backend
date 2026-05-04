@@ -47,7 +47,7 @@ services:
       - learning-platform
 
   minio:
-    image: minio/minio:RELEASE.2025-02-28T14-11-43Z
+    image: minio/minio:v7.5.4
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
