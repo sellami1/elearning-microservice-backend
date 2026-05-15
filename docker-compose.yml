@@ -1,6 +1,7 @@
 services:
   mongodb:
     image: mongo:7
+    container_name: elearning-mongodb
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: user_service_db
@@ -19,6 +20,7 @@ services:
 
   course-postgres:
     image: postgres:16-alpine
+    container_name: elearning-course-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: course_user
@@ -40,6 +42,7 @@ services:
 
   minio:
     image: minio/minio:latest
+    container_name: elearning-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -61,6 +64,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: elearning-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -79,6 +83,7 @@ services:
     build:
       context: ./backend/user-service
       dockerfile: Dockerfile
+    container_name: elearning-user-service
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV}
@@ -113,6 +118,7 @@ services:
     build:
       context: ./backend/course-service
       dockerfile: Dockerfile
+    container_name: elearning-course-service
     restart: unless-stopped
     environment:
       COURSE_BACKEND_ENV: ${COURSE_BACKEND_ENV}
@@ -153,6 +159,7 @@ services:
     build:
       context: ./backend/analytics-service
       dockerfile: Dockerfile
+    container_name: elearning-analytics-service
     restart: unless-stopped
     environment:
       ANALYTICS_BACKEND_ENV: ${ANALYTICS_BACKEND_ENV}
@@ -203,6 +210,7 @@ services:
 
   gateway:
     image: nginx:alpine
+    container_name: elearning-gateway
     restart: unless-stopped
     ports:
       - "80:80"
