@@ -2,16 +2,13 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-ENV NODE_ENV=dev \
-	USER_BACKEND_ENV=dev
+ENV NODE_ENV=development \
+    USER_BACKEND_ENV=dev
 
 COPY package*.json ./
-
 RUN npm ci --omit=dev && npm cache clean --force
 
-COPY . .
-
-RUN chown -R node:node /app
+COPY --chown=node:node . .
 
 USER node
 
