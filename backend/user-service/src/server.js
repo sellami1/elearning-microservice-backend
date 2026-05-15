@@ -199,7 +199,7 @@ app.all("*", (req, res, next) => {
 app.use(globalError);
 
 const PORT = process.env.USER_BACKEND_PORT || 8002;
-const server = app.listen('0.0.0.0', PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`Application running on port ${PORT}`);
 });
 
