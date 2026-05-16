@@ -269,7 +269,7 @@ course-service:
     # Internal for SDK communication
     COURSE_BACKEND_MINIO_ENDPOINT: minio:9000
     # Add new env var for presigned URL generation
-    COURSE_BACKEND_MINIO_PUBLIC_URL: http://localhost/media  # Gateway path
+    COURSE_BACKEND_MINIO_PUBLIC_URL: http://homeserver/media  # Gateway path
 ```
 
 ### 6. Optional: SSL/HTTPS
