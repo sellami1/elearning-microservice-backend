@@ -6,6 +6,7 @@ from fastapi import UploadFile, HTTPException
 from .config import get_settings
 import os
 import io
+import json
 from datetime import datetime, timedelta
 
 settings = get_settings()
@@ -20,6 +21,8 @@ class MinIOClient:
         )
         self.bucket_name = settings.minio_bucket_name
         self._ensure_bucket_exists()
+        if settings.minio_bucket_public:
+            self._ensure_bucket_public_policy()
     
     def _ensure_bucket_exists(self):
         """Create bucket if it doesn't exist"""
@@ -30,6 +33,27 @@ class MinIOClient:
             raise HTTPException(
                 status_code=500,
                 detail=f"MinIO bucket error: {str(e)}"
+            )
+
+    def _ensure_bucket_public_policy(self):
+        """Ensure bucket allows public read access for objects"""
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"AWS": ["*"]},
+                    "Action": ["s3:GetObject"],
+                    "Resource": [f"arn:aws:s3:::{self.bucket_name}/*"],
+                }
+            ],
+        }
+        try:
+            self.client.set_bucket_policy(self.bucket_name, json.dumps(policy))
+        except S3Error as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"MinIO bucket policy error: {str(e)}"
             )
     
     def _validate_thumbnail_file(self, file: UploadFile) -> Tuple[bool, str]:

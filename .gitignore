@@ -53,3 +53,4 @@ backend/course-service/app/tests/
 mock_media/
 
 tests/
+push.sh
