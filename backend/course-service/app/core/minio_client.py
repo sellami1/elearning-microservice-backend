@@ -120,7 +120,7 @@ class MinIOClient:
             
             # Generate URL
             if settings.minio_public_url:
-                # Use public URL (e.g., http://homeserver/media)
+                # Use public URL (e.g., http://localhost/media)
                 new_url = f"{settings.minio_public_url}/{object_name}"
             else:
                 # Fallback to internal endpoint with protocol
@@ -165,7 +165,7 @@ class MinIOClient:
             
             # Generate URL
             if settings.minio_public_url:
-                # Use public URL (e.g., http://homeserver/media)
+                # Use public URL (e.g., http://localhost/media)
                 url = f"{settings.minio_public_url}/{object_name}"
             else:
                 # Fallback to internal endpoint with protocol
