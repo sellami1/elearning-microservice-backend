@@ -189,10 +189,10 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_COURSE_SERVICE_URL=http://localhost
-      NEXT_PUBLIC_USER_SERVICE_URL=http://localhost
-      NEXT_PUBLIC_ANALYTICS_SERVICE_URL=http://localhost
-      NEXT_PUBLIC_MINIO_URL=http://localhost/media
+      NEXT_PUBLIC_COURSE_SERVICE_URL: http://localhost
+      NEXT_PUBLIC_USER_SERVICE_URL: http://localhost
+      NEXT_PUBLIC_ANALYTICS_SERVICE_URL: http://localhost
+      NEXT_PUBLIC_MINIO_URL: http://localhost/media
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     healthcheck:
