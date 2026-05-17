@@ -1,7 +1,7 @@
 services:
   mongodb:
     image: mongo:7
-    container_name: elearning-mongodb
+    container_name: elearning-mongodb-container
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: user_service_db
@@ -20,7 +20,7 @@ services:
 
   course-postgres:
     image: postgres:16-alpine
-    container_name: elearning-course-postgres
+    container_name: elearning-course-postgres-container
     restart: unless-stopped
     environment:
       POSTGRES_USER: course_user
@@ -42,7 +42,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: elearning-minio
+    container_name: elearning-minio-container
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -64,7 +64,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: elearning-redis
+    container_name: elearning-redis-container
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -83,7 +83,8 @@ services:
     build:
       context: ./backend/user-service
       dockerfile: Dockerfile
-    container_name: elearning-user-service
+    image: elearning-user-service-image:v1.0
+    container_name: elearning-user-service-container
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV}
@@ -112,7 +113,8 @@ services:
     build:
       context: ./backend/course-service
       dockerfile: Dockerfile
-    container_name: elearning-course-service
+    image: elearning-course-service-image:v1.0
+    container_name: elearning-course-service-container
     restart: unless-stopped
     environment:
       COURSE_BACKEND_ENV: ${COURSE_BACKEND_ENV}
@@ -154,7 +156,8 @@ services:
     build:
       context: ./backend/analytics-service
       dockerfile: Dockerfile
-    container_name: elearning-analytics-service
+    image: elearning-analytics-service-image:v1.0
+    container_name: elearning-analytics-service-container
     restart: unless-stopped
     environment:
       ANALYTICS_BACKEND_ENV: ${ANALYTICS_BACKEND_ENV}
@@ -187,7 +190,8 @@ services:
     build:
       context: ../elearning-microservice-platform-frontend
       dockerfile: Dockerfile
-    container_name: elearning-frontend
+    image: elearning-frontend-image:v1.0
+    container_name: elearning-frontend-container
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_COURSE_SERVICE_URL: http://homeserver
@@ -207,7 +211,7 @@ services:
 
   gateway:
     image: nginx:alpine
-    container_name: elearning-gateway
+    container_name: elearning-gateway-container
     restart: unless-stopped
     ports:
       - "80:80"
