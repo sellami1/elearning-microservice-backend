@@ -187,6 +187,7 @@ services:
     build:
       context: ../elearning-microservice-platform-frontend
       dockerfile: Dockerfile
+      container_name: elearning-frontend
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_COURSE_SERVICE_URL: http://localhost
