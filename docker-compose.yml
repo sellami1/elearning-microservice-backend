@@ -220,9 +220,13 @@ services:
 
 volumes:
   mongodb_data:
+    name: elearning-mongodb-data
   course_postgres_data:
+    name: elearning-course-postgres-data
   minio_data:
+    name: elearning-minio-data
   redis_data:
+    name: elearning-redis-data
 
 networks:
   net-edge:
