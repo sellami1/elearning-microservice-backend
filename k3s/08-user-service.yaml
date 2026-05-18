@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: learning-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      initContainers:
+      - name: wait-for-mongo
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
+      containers:
+      - name: user-service
+        image: kadhemsellami/elearning-user-service-image:v1.0 # My registry's custom built image
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8002
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "dev"
+        - name: USER_BACKEND_ENV
+          value: "dev"
+        - name: USER_BACKEND_PORT
+          value: "8002"
+        - name: USER_BACKEND_URL
+          value: "http://user-service:8002"
+        - name: USER_BACKEND_PUBLIC_FRONTEND_URL
+          value: "http://localhost:3000"
+        - name: USER_BACKEND_JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: jwt-secret-key
+        - name: USER_BACKEND_JWT_EXPIRE_TIME
+          value: "1d"
+        - name: USER_BACKEND_MONGODB_URI
+          value: "mongodb://mongodb:27017/user_service_db"
+        - name: USER_BACKEND_APP_NAME
+          value: "E-learning User Service"
+        - name: USER_BACKEND_EMAIL_PORT
+          value: "1025"
+        - name: USER_BACKEND_EMAIL_SECURE
+          value: "false"
+        - name: USER_BACKEND_EMAIL_FROM
+          value: "no-reply@local.test"
+        - name: USER_BACKEND_EMAIL_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: email-user
+        - name: USER_BACKEND_EMAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: email-password
+        livenessProbe:
+          tcpSocket:
+            port: 8002
+          initialDelaySeconds: 25
+          periodSeconds: 15
+          timeoutSeconds: 7
+          failureThreshold: 6
+        readinessProbe:
+          tcpSocket:
+            port: 8002
+          initialDelaySeconds: 25
+          periodSeconds: 15
+          timeoutSeconds: 7
+          failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: learning-platform
+spec:
+  selector:
+    app: user-service
+  ports:
+  - port: 8002
+    targetPort: 8002
+    name: http

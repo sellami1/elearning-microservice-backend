@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: course-service
+  namespace: learning-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: course-service
+  template:
+    metadata:
+      labels:
+        app: course-service
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z course-postgres 5432; do echo waiting for postgres; sleep 2; done;']
+      - name: wait-for-minio
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z minio 9000; do echo waiting for minio; sleep 2; done;']
+      containers:
+      - name: course-service
+        image: kadhemsellami/elearning-course-service-image:v1.0  # My registry's custom built image
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8001
+          name: http
+        env:
+        - name: COURSE_BACKEND_ENV
+          value: "dev"
+        - name: COURSE_BACKEND_LOG_LEVEL
+          value: "DEBUG"
+        - name: COURSE_BACKEND_PORT
+          value: "8001"
+        - name: COURSE_BACKEND_POSTGRES_URL
+          value: "postgresql://course_user:course_password@course-postgres:5432/course_db"
+        - name: COURSE_BACKEND_JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: jwt-secret-key
+        - name: COURSE_BACKEND_JWT_ALGORITHM
+          value: "HS256"
+        - name: COURSE_BACKEND_ACCESS_TOKEN_EXPIRE_MINUTES
+          value: "30"
+        - name: COURSE_BACKEND_MINIO_ENDPOINT
+          value: "minio:9000"
+        - name: COURSE_BACKEND_MINIO_PUBLIC_URL
+          value: "http://localhost/media"
+        - name: COURSE_BACKEND_MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: minio-root-user
+        - name: COURSE_BACKEND_MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: minio-root-password
+        - name: COURSE_BACKEND_MINIO_BUCKET_NAME
+          value: "courses-media"
+        - name: COURSE_BACKEND_MINIO_SECURE
+          value: "False"
+        - name: COURSE_BACKEND_ANALYTICS_URL
+          value: "http://analytics-service:8003"
+        - name: COURSE_BACKEND_ANALYTICS_REQUEST_TIMEOUT_SECONDS
+          value: "2.0"
+        - name: COURSE_BACKEND_APP_NAME
+          value: "Course Service"
+        - name: COURSE_BACKEND_APP_VERSION
+          value: "1.0.0"
+        - name: COURSE_BACKEND_DEBUG
+          value: "True"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 25
+          periodSeconds: 15
+          timeoutSeconds: 7
+          failureThreshold: 6
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 25
+          periodSeconds: 15
+          timeoutSeconds: 7
+          failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: course-service
+  namespace: learning-platform
+spec:
+  selector:
+    app: course-service
+  ports:
+  - port: 8001
+    targetPort: 8001
+    name: http

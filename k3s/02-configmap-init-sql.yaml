@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: learning-platform
+data:
+  init.sql: |
+    -- Create extensions if needed
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+    -- Set up initial schema (tables will be created by SQLAlchemy)
+    -- This file can be used for any initial data seeding
